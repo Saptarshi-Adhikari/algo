@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "algotrade-ai"
+version = "0.1.0"
+description = "Local-first AI Quantitative Research and Paper-Trading Platform for Indian Markets and Forex"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "."
+]
