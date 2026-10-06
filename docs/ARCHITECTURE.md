@@ -8,8 +8,8 @@ This AI Quantitative Research Platform provides an end-to-end, local-first resea
 [ Market Data Adapters ]  -->  [ Data Split Engine (Dev / Val / Holdout) ]
 (Indian, Forex, Replay)                 │
                                         ▼
-[ Local LLM Layer ]       -->  [ Core AI Agents ]
-(Ollama / Gemini / Fallback)   (Researcher, Builder, Reviewer, Critic, Next-Exp)
+[ 4-Tier Local LLM Router ] --> [ Core AI Agents ]
+(Ollama -> Gemini -> OR -> Mock) (Researcher, Builder, Reviewer, Critic, Next-Exp)
                                         │
                                         ▼
                                [ Deterministic Backtester ]
@@ -26,6 +26,16 @@ This AI Quantitative Research Platform provides an end-to-end, local-first resea
                                         ▼
                                [ Local Streamlit Dashboard ]
 ```
+
+---
+
+## LLM Layer Integration
+
+The LLM abstraction uses a local-first priority chain:
+1. **Ollama (Primary Local)**: Communicates with local Ollama (`qwen2.5:7b`). Zero paid cloud dependency.
+2. **Gemini API (Secondary Optional)**: Used only if configured in local `.env` and Ollama is unreachable.
+3. **OpenRouter API (Tertiary Optional)**: Used only if configured in local `.env` and prior providers fail.
+4. **Mock Provider (Final Safe Fallback)**: Offline deterministic fallback guaranteeing zero system crashes.
 
 ---
 

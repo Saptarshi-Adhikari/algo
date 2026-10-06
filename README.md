@@ -11,40 +11,48 @@ A local-first, provider-agnostic AI quantitative research and paper-trading plat
 
 ---
 
-## 🏛️ System Architecture
+## 🤖 LLM Router Priority (Local-First Architecture)
 
 ```
-[ Market Data Adapters ]  -->  [ Data Split Engine (Dev / Val / Holdout) ]
-(Indian NSE, Forex, Replay)             │
-                                        ▼
-[ Local LLM Layer ]       -->  [ Core AI Agents ]
-(Ollama / Gemini / Fallback)   (Researcher, Builder, Reviewer, Critic, Next-Exp)
-                                        │
-                                        ▼
-                               [ Deterministic Backtester ]
-                                        │
-                                        ▼
-                               [ Regime Classifier & Metrics Engine ]
-                                        │
-                                        ▼
-                               [ Paper Portfolio Engine ]
-                                        │
-                                        ▼
-                               [ SQLite Memory & Version Lineage ]
-                                        │
-                                        ▼
-                               [ Local Streamlit Dashboard ]
+                       LLM ROUTER
+                           │
+                           ▼
+                 ┌───────────────────┐
+                 │  Ollama / Qwen    │  <-- PRIMARY (Local-First)
+                 └─────────┬─────────┘
+                           │ failure / unavailable
+                           ▼
+                 ┌───────────────────┐
+                 │    Gemini API     │  <-- SECONDARY (Optional, if key set in .env)
+                 └─────────┬─────────┘
+                           │ failure / unavailable
+                           ▼
+                 ┌───────────────────┐
+                 │   OpenRouter API  │  <-- TERTIARY (Optional, if key set in .env)
+                 └─────────┬─────────┘
+                           │ failure / unavailable
+                           ▼
+                 ┌───────────────────┐
+                 │   Mock Provider   │  <-- FINAL SAFE FALLBACK
+                 └───────────────────┘
 ```
+
+The application is **100% functional locally** using Ollama alone without requiring any cloud API key or paid subscription.
+
+---
+
+## 🔒 Security & Environment Rules
+
+- **API Keys**: Place your private credentials in `.env` (never committed).
+- **`.env.example`**: Contains only empty placeholders (`GEMINI_API_KEY=`, `OPENROUTER_API_KEY=`).
+- **`.gitignore`**: Strictly ignores `.env` and `.env.*` to prevent credential exposure.
+- **Rotation Note**: Any previously exposed key should be immediately rotated/revoked.
 
 ---
 
 ## ⚡ Quick Start
 
-### 1. Prerequisites
-- **Python 3.10+**
-- *(Optional)* **Ollama** installed locally for fully offline AI generation (`qwen2.5:7b` recommended).
-
-### 2. Installation
+### 1. Installation
 Clone the repository and set up a virtual environment:
 
 ```bash
@@ -61,59 +69,38 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### 2. Local Environment Configuration
+Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+To use optional Gemini or OpenRouter fallback, populate `GEMINI_API_KEY` or `OPENROUTER_API_KEY` inside `.env`.
+
 ### 3. Running the System
 
-#### A. Launch Interactive Streamlit Dashboard
+#### Launch Interactive Streamlit Dashboard
 ```bash
 streamlit run dashboard/app.py
 ```
 Open your browser at `http://localhost:8501`.
 
-#### B. Run Automated Research Loop via Python CLI
-```python
-from app.services.experiment_runner import ExperimentRunner
-from app.data.indian_provider import IndianMarketDataProvider
-
-runner = ExperimentRunner(data_provider=IndianMarketDataProvider())
-results = runner.run_experiments(symbol="RELIANCE.NS", max_experiments=5)
-```
-
-#### C. Execute Test Suite
+#### Execute Test Suite
 ```bash
-pytest
-```
-
----
-
-## 🤖 Ollama & LLM Configuration
-
-The system uses a provider-agnostic LLM router:
-- **Primary**: Local [Ollama](https://ollama.ai) (`qwen2.5:7b` or `llama3.2`).
-- **Fallback**: Automatic fallback to structured mock/rule provider if Ollama is offline.
-
-To start Ollama with Qwen 2.5:
-```bash
-ollama run qwen2.5:7b
-```
-
-To configure environment variables, create a `.env` file:
-```env
-LLM_PROVIDER=ollama
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=qwen2.5:7b
+pytest -v
 ```
 
 ---
 
 ## 📚 Documentation Suite
 
-Detailed architecture guides are available in the `docs/` folder:
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — Core component design & AI workflow
-- [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) — Market data adapters & split engine
-- [`docs/AI_MODELS.md`](docs/AI_MODELS.md) — LLM provider abstraction & Pydantic JSON schemas
+- [`docs/AI_MODELS.md`](docs/AI_MODELS.md) — LLM provider abstraction, 4-tier fallback router & Pydantic JSON schemas
 - [`docs/PAPER_TRADING.md`](docs/PAPER_TRADING.md) — Paper execution engine & safety constraints
+- [`docs/DATA_SOURCES.md`](docs/DATA_SOURCES.md) — Market data adapters & split engine
 - [`docs/EXPERIMENT_LOOP.md`](docs/EXPERIMENT_LOOP.md) — Bounded experiment loop & memory persistence
-- [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) — Completed task roadmap
+- [`docs/LLM_PROVIDER_VERIFICATION.md`](docs/LLM_PROVIDER_VERIFICATION.md) — LLM router verification report
 
 ---
 
