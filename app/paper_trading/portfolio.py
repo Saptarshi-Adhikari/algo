@@ -31,7 +31,7 @@ class PaperPortfolio:
         """Simulate opening a new paper position."""
         cost = (fill_price * quantity) + fee
         if cost > self.virtual_cash:
-            raise ValueError(f"Insufficient virtual cash (₹/${self.virtual_cash:.2f}) for trade cost (₹/${cost:.2f})")
+            raise ValueError(f"Insufficient virtual cash (INR/${self.virtual_cash:.2f}) for trade cost (INR/${cost:.2f})")
 
         self.virtual_cash -= cost
         pos_id = f"POS_{symbol}_{int(datetime.utcnow().timestamp())}"
@@ -88,7 +88,7 @@ class PaperPortfolio:
         )
         self.closed_trades.append(trade_rec)
         self.trade_counter += 1
-        logger.info(f"PAPER TRADE CLOSED: {symbol} Exit={exit_price:.2f} PnL=₹/${trade_pnl:.2f}")
+        logger.info(f"PAPER TRADE CLOSED: {symbol} Exit={exit_price:.2f} PnL=INR/${trade_pnl:.2f}")
         return trade_rec
 
     @paper_trading_guard
