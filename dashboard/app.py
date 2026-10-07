@@ -107,6 +107,7 @@ PAGE_LABELS = {
     "🧠 AI Brain": "ai_brain",
     "📋 Decision Dataset": "decision_dataset",
     "🤖 Laya Shadow": "laya_shadow",
+    "🌲 LightGBM Predictor": "lightgbm_predictor",
     "📂 Data & Datasets": "data",
     "⚙️ System / Safety": "system",
 }
@@ -941,25 +942,71 @@ def render_laya_shadow():
     active_candidate = registry.get_active_candidate()
 
     st.divider()
-    st.subheader("📊 Phase 16 Independent Status Engine")
-    st.info("ℹ️ Collection Status and Evidence Status are independent. Collection answers: 'Are fresh predictions being gathered?' Evidence answers: 'Do we have enough resolved outcomes for defensible claims?'")
+    st.subheader("📊 Phase 16 Independent Status Engine (Research-Integrity Corrected)")
+    st.info("ℹ️ Collection Status and Evidence Status are decoupled. Data Availability requires timestamp audit post-Phase 15 cutoff. Economic metrics enforce minimum sample sufficiency rules.")
 
     s1, s2, s3, s4 = st.columns(4)
     s1.metric("1. Data Availability", assessment.data_availability_status.value)
     s2.metric("2. Collection Status", assessment.collection_status.value)
     s3.metric("3. Evidence Status", assessment.evidence_status.value)
-    s4.metric("4. Calibration Status", assessment.calibration_status.value)
+    s4.metric("4. Fresh Calibration", assessment.fresh_calibration_status.value)
 
-    st.markdown(f"**Model Health:** `{assessment.model_health_status.value}` · **Drift Status:** `{assessment.drift_status}` · **Economic Shadow Status:** `<span class='badge-no-trades'>{assessment.economic_shadow_status}</span>`", unsafe_allow_html=True)
+    st.markdown(f"**Model Health:** `{assessment.model_health_status.value}` · **Economic Shadow Status:** `<span class='badge-no-trades'>{assessment.economic_shadow_status}</span>`", unsafe_allow_html=True)
 
-    # Top KPI Metrics
+    # Data Availability Cutoff Audit Panel
     st.divider()
-    st.subheader("📈 Fresh-Shadow Collection & Evidence Progress")
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Fresh Predictions", assessment.total_fresh_predictions)
-    col2.metric("Raw Resolved Outcomes", assessment.raw_resolved_predictions)
-    col3.metric("Effective Sample Size", assessment.effective_resolved_predictions)
-    col4.metric("Direction Accuracy", f"{assessment.direction_accuracy * 100:.1f}%")
+    st.subheader("🛡️ Fresh Data Audit & Phase 15 Cutoff Verification")
+    da1, da2, da3, da4 = st.columns(4)
+    da1.metric("Total Historical Records", assessment.total_available_records)
+    da2.metric("Phase 15 Baseline Records", assessment.phase15_records)
+    da3.metric("Fresh Shadow Records", assessment.fresh_records, delta="Post Phase 15 Cutoff")
+    da4.metric("Fresh Symbols", assessment.fresh_records if assessment.fresh_records > 0 else 0)
+
+    # Baseline vs Fresh Calibration Panel
+    st.divider()
+    st.subheader("🎯 Calibration Audit: Phase 15 Baseline vs Phase 16 Fresh Shadow")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("**PHASE 15 BASELINE CALIBRATION (131 Calibration Cases)**")
+        st.json(assessment.phase15_baseline_calibration)
+    with c2:
+        st.markdown("**PHASE 16 FRESH SHADOW CALIBRATION (Resolved Fresh Predictions)**")
+        st.json({
+            "fresh_calibration_status": assessment.fresh_calibration_status.value,
+            "fresh_calibrated_ece": str(assessment.fresh_calibrated_ece),
+            "fresh_brier_score": str(assessment.fresh_brier_score),
+            "sample_note": "Requires >= 30 resolved fresh predictions for calibration stability claim"
+        })
+
+    # Economic Shadow Analysis & Sufficiency Rules Panel
+    st.divider()
+    st.subheader("💹 Economic Shadow Results (Hypothetical Only)")
+    st.info("⚠️ Economic metrics strictly enforce sample sufficiency rules. Single-trade results do NOT calculate Sharpe ratio or Sharpe-based conclusions.")
+    ec1, ec2, ec3, ec4 = st.columns(4)
+    ec1.metric("Shadow Trades", assessment.trade_count)
+    ec2.metric("Raw Return", f"{assessment.hypothetical_raw_return * 100:+.2f}%")
+    ec3.metric("Net Return", f"{assessment.hypothetical_net_return * 100:+.2f}%")
+    ec4.metric("Sharpe Ratio", str(assessment.sharpe_ratio))
+
+    # Drift Status Panel
+    st.divider()
+    st.subheader("🌊 Drift Monitoring (Sufficiency Gate Active)")
+    dr1, dr2, dr3, dr4 = st.columns(4)
+    dr1.metric("Feature Drift", assessment.data_drift_status.value)
+    dr2.metric("Prediction Drift", assessment.prediction_drift_status.value)
+    dr3.metric("Calibration Drift", assessment.calibration_drift_status.value)
+    dr4.metric("Regime Drift", assessment.regime_drift_status.value)
+
+    # Latency Stats Panel
+    st.divider()
+    st.subheader("⏱️ Latency Measurement Audit")
+    l1, l2 = st.columns(2)
+    with l1:
+        st.markdown("**Model Forward Inference Latency (ms)**")
+        st.json(assessment.model_inference_latency.model_dump())
+    with l2:
+        st.markdown("**End-to-End Prediction Pipeline Latency (ms)**")
+        st.json(assessment.end_to_end_latency.model_dump())
 
     st.divider()
     st.subheader("⚙️ Active Candidate Model (`ALGO_LAYA_V001`)")
@@ -1014,6 +1061,48 @@ def render_laya_shadow():
             })
         st.dataframe(table_data, use_container_width=True)
 
+def render_lightgbm_predictor():
+    st.title("🌲 LightGBM Numerical Prediction Foundation (`ALGO_LGBM_V001`)")
+    st.markdown("Dedicated numerical machine-learning layer predicting 4-bar forward returns (`LIGHTGBM_TARGET_POLICY_V1`).")
+
+    st.warning("⚠️ LIGHTGBM AUTHORITY: OFFLINE RESEARCH ONLY. Numerical predictions do NOT execute trades, alter paper portfolios, or override risk controls.")
+
+    from app.memory.lightgbm_model_registry import LightGBMModelRegistry
+    registry = LightGBMModelRegistry()
+    manifest = registry.get_manifest("ALGO_LGBM_V001")
+
+    if manifest:
+        st.success(f"✅ Active Registered Candidate: `{manifest.model_id}` (Status: `{manifest.status.value}`)")
+        
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Model ID", manifest.model_id)
+        m2.metric("Target Horizon", "4 Bars Forward")
+        m3.metric("Status", manifest.status.value)
+        m4.metric("Trading Authority", manifest.decision_authority)
+
+        st.divider()
+        st.subheader("🎯 Evaluation Metrics (Validation vs Protected Holdout)")
+        val_m = manifest.validation_metrics
+        hold_m = manifest.holdout_metrics
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**VALIDATION SPLIT METRICS (15% Chronological)**")
+            st.json(val_m)
+        with c2:
+            st.markdown("**PROTECTED HOLDOUT METRICS (15% Chronological)**")
+            st.json(hold_m)
+
+        st.divider()
+        st.subheader("📊 Deterministic Baseline Model Comparison")
+        st.json(manifest.baseline_metrics)
+
+        st.divider()
+        st.subheader("⚙️ Model Architecture & Provenance Manifest")
+        st.json(manifest.model_dump())
+    else:
+        st.info("ℹ️ No LightGBM manifest registered yet. Run `python scripts/verify_phase17.py` to fit and register ALGO_LGBM_V001.")
+
 # =============================================
 # MAIN ROUTER
 # =============================================
@@ -1033,6 +1122,8 @@ elif page == "decision_dataset":
     render_decision_dataset()
 elif page == "laya_shadow":
     render_laya_shadow()
+elif page == "lightgbm_predictor":
+    render_lightgbm_predictor()
 elif page == "data":
     render_data()
 elif page == "system":

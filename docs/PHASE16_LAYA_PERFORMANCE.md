@@ -1,6 +1,10 @@
-# Phase 16 — Laya Performance & Economic Shadow Evaluation
+# Phase 16 — Laya Performance & Economic Metric Sufficiency Rules
 
-## Performance Metrics Breakdown
-1. **Model Quality**: Direction Accuracy, Regime Accuracy, F1 Score.
-2. **Probability Quality**: Brier Score, ECE, Temperature Calibration.
-3. **Economic Shadow Quality**: Realized Return, Net Return, Sharpe Ratio, Profit Factor (labeled strictly `HYPOTHETICAL_SHADOW_RESULT`).
+## Economic Metric Sufficiency Policy
+Single-trade or small-sample observations MUST NOT report calculated Sharpe ratios, Profit Factors, or Drawdown metrics.
+
+- **Trade Count < 2**:
+  - `Sharpe Ratio`: `NOT_AVAILABLE — insufficient sample`
+  - `Profit Factor`: `NOT_AVAILABLE — insufficient sample`
+  - `Max Drawdown`: `NOT_AVAILABLE — insufficient sample`
+- **Labeling**: All hypothetical shadow returns are labeled strictly `HYPOTHETICAL_SHADOW_RESULT` and do NOT affect official paper trading portfolios.

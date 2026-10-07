@@ -1,4 +1,12 @@
 {
-  "models": {},
-  "active_candidate": null
+  "models": {
+    "ALGO_LAYA_V001": {
+      "model_id": "ALGO_LAYA_V001",
+      "run_id": "ALGO_LAYA_TRAIN_RUN_001",
+      "base_model": "convaiinnovations/laya",
+      "promotion_status": "PROMOTE_TO_SHADOW",
+      "decision_authority": "SHADOW_ONLY"
+    }
+  },
+  "active_candidate": "ALGO_LAYA_V001"
 }

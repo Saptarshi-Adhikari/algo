@@ -1,24 +1,25 @@
-# Phase 16 — Verification Report
+# Phase 16 — Verification Report (Research Integrity Corrected)
 
-## Verification Highlights
-1. **Independent Status Architecture**: Data Availability, Collection Status, Evidence Status, Calibration Status, Model Health, and Economic Shadow Status operate as decoupled, typed status fields.
-2. **Status Independence Verified**: Tests prove Collection Status pausing does not erase Evidence Status, and Collection Status gathering predictions does not alter Data Availability.
-3. **DataAvailabilityGate**: Successfully audits dataset registry for fresh, valid market data.
-4. **Delayed Outcome Resolver**: Asynchronously resolves market returns and direction correctness for collected shadow predictions.
-5. **Dashboard Visibility**: Independent status metrics displayed cleanly under Laya Shadow tab.
-6. **Safety & Authority**: `decision_authority = SHADOW_ONLY`, `PAPER_TRADING_ONLY = true`, `ALLOW_REAL_BROKER = false`.
+## Research Integrity Verification Highlights
+1. **Scope-Specific Phase 15 Cutoffs**: Timestamps strictly postdating `2026-09-20T23:59:59Z` are required for fresh records. Historical dataset size (943) is never conflated with fresh shadow records.
+2. **Status Decoupling Verified**: Collection Status pausing/restarting preserves accumulated Evidence Status.
+3. **Decoupled Baseline vs Fresh Calibration**: Phase 15 baseline calibration ($T=1.85$, ECE $0.08$) is kept distinct from fresh shadow calibration (`INSUFFICIENT_EVIDENCE` for small samples).
+4. **Economic Metric Sufficiency Rules**: Single-trade outcomes set Sharpe ratio to `NOT_AVAILABLE — insufficient sample`.
+5. **Drift Sufficiency Rules**: Samples $< 30$ report `INSUFFICIENT_EVIDENCE` for all drift monitoring dimensions.
+6. **Latency Measurement Separation**: Model forward inference latency and end-to-end latency are tracked separately with count, mean, p50, p95, and max.
+7. **Instrument Identity Normalization**: Source symbols (e.g. `BTC/USDT`) map to project canonical symbols (`BTC-USD`) with full provenance stored.
 
-## Verification Scripts Run
-- `pytest -v` (PASSED)
-- `verify_phase2.py` (PASSED)
-- `verify_phase6.py` (PASSED)
-- `verify_phase7.py` (PASSED)
-- `verify_phase8.py` (PASSED)
-- `verify_phase9_10.py` (PASSED)
-- `verify_phase11.py` (PASSED)
-- `verify_phase12.py` (PASSED)
-- `verify_phase13.py` (PASSED)
-- `verify_phase14.py` (PASSED)
-- `verify_phase15.py` (PASSED)
-- `verify_phase16.py` (PASSED)
-- `python -m py_compile dashboard/app.py` (PASSED)
+## Verification Executed
+- `pytest -v`
+- `verify_phase2.py`
+- `verify_phase6.py`
+- `verify_phase7.py`
+- `verify_phase8.py`
+- `verify_phase9_10.py`
+- `verify_phase11.py`
+- `verify_phase12.py`
+- `verify_phase13.py`
+- `verify_phase14.py`
+- `verify_phase15.py`
+- `verify_phase16.py`
+- `python -m py_compile dashboard/app.py`

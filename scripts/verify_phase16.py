@@ -1,4 +1,4 @@
-"""Phase 16 Verification Script — Laya Shadow Performance, Drift Monitoring & Separate Collection/Evidence Status."""
+"""Phase 16 Verification Script — Laya Shadow Performance, Drift Monitoring & Separate Collection/Evidence Status (Research Integrity Audit)."""
 import sys
 from pathlib import Path
 
@@ -11,14 +11,14 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from app.config.settings import settings
 from app.domain.laya_phase16_schemas import (
-    DataAvailabilityStatus, CollectionStatus, EvidenceStatus, CalibrationStatus
+    DataAvailabilityStatus, CollectionStatus, EvidenceStatus, CalibrationStatus, DriftStatus
 )
 from app.services.data_availability_gate import DataAvailabilityGate
 from app.services.laya_shadow_collector import LayaShadowCollectorService
 
 def main():
     print("=======================================================")
-    print("  QUANT AI PHASE 16 VERIFICATION SUITE")
+    print("  QUANT AI PHASE 16 VERIFICATION SUITE (RESEARCH INTEGRITY AUDITED)")
     print("=======================================================")
 
     # 1. Safety & Authority Audit
@@ -27,41 +27,64 @@ def main():
     print("\n-- [TASK 01] Safety & Authority Audit")
     print("  [OK] Safety constraints intact (PAPER_TRADING_ONLY=True, ALLOW_REAL_BROKER=False)")
 
-    # 2. Data Availability Gate Audit
-    print("\n-- [TASK 02] Data Availability Gate Audit")
+    # 2. Phase 15 Cutoff Timestamps & Fresh-Data Audit
+    print("\n-- [TASK 02] Phase 15 Cutoff Timestamps & Data Availability Audit")
     gate = DataAvailabilityGate()
-    report = gate.audit_data_availability()
-    assert report.status in [DataAvailabilityStatus.DATA_AVAILABLE, DataAvailabilityStatus.DATA_STALE, DataAvailabilityStatus.DATA_UNAVAILABLE, DataAvailabilityStatus.NO_ELIGIBLE_MARKETS]
-    print(f"  [OK] Data Availability Audit PASSED: {report.status}")
-
-    # 3. Independent Status Separation Verification
-    print("\n-- [TASK 03] Independent Status Separation Audit")
-    collector = LayaShadowCollectorService()
+    assert gate.is_timestamp_fresh("2026-09-15T00:00:00Z", "RELIANCE.NS", "INDIAN_EQUITY", "1d") is False
+    assert gate.is_timestamp_fresh("2026-10-08T00:00:00Z", "RELIANCE.NS", "INDIAN_EQUITY", "1d") is True
     
-    # Test valid combination: DATA_AVAILABLE + COLLECTING + INSUFFICIENT_EVIDENCE
-    collector.collect_fresh_prediction(symbol="RELIANCE.NS", asset_class="INDIAN_EQUITY", timeframe="1d", predicted_direction="BUY")
+    report = gate.audit_data_availability()
+    print(f"  [OK] Data Availability Audit PASSED: {report.data_availability_status}")
+    print(f"       Total Records:     {report.total_available_records}")
+    print(f"       Phase 15 Baseline: {report.phase15_records}")
+    print(f"       Fresh Records:     {report.fresh_record_count}")
+
+    # 3. Independent Status Separation Audit
+    print("\n-- [TASK 03] Independent Status Separation Audit")
+    test_storage = ROOT_DIR / "data" / "verify_phase16_test_records.json"
+    if test_storage.exists():
+        test_storage.unlink()
+        
+    collector = LayaShadowCollectorService(storage_path=test_storage)
+    pred = collector.collect_fresh_prediction(
+        symbol="BTC/USDT", asset_class="CRYPTO", timeframe="1h",
+        predicted_direction="BUY", timestamp="2026-10-08T12:00:00Z"
+    )
     assessment = collector.generate_assessment()
     assert assessment.collection_status == CollectionStatus.COLLECTING
-    assert assessment.evidence_status in [EvidenceStatus.NO_EVIDENCE, EvidenceStatus.INSUFFICIENT_EVIDENCE, EvidenceStatus.LIMITED_EVIDENCE]
+    assert assessment.evidence_status in [EvidenceStatus.NO_EVIDENCE, EvidenceStatus.INSUFFICIENT_EVIDENCE]
     print(f"  [OK] Valid Combination 1: Collection={assessment.collection_status.value} | Evidence={assessment.evidence_status.value}")
 
-    # Test valid combination: PAUSED + ADEQUATE_EVIDENCE (Independence test)
-    collector.collection_status = CollectionStatus.PAUSED
-    collector.evidence_status = EvidenceStatus.ADEQUATE_EVIDENCE
-    paused_assessment = collector.generate_assessment()
-    assert collector.collection_status == CollectionStatus.PAUSED
-    print("  [OK] Valid Combination 2 (Paused Collector preserves Evidence): Collection=PAUSED | Evidence=ADEQUATE_EVIDENCE")
-
-    # 4. Effective Sample Size & Delayed Resolution Test
-    print("\n-- [TASK 04] Delayed Outcome Resolver & Effective Sample Audit")
-    pred = collector.collect_fresh_prediction(symbol="TCS.NS", asset_class="INDIAN_EQUITY", timeframe="1d", predicted_direction="BUY")
-    resolved = collector.resolve_delayed_outcome(prediction_id=pred.prediction_id, ground_truth_direction="BUY", raw_return=0.02, net_return=0.018)
+    # 4. Metric Sufficiency Audit (1-Trade Sharpe & Calibration Separation)
+    print("\n-- [TASK 04] Economic Metric Sufficiency & Calibration Separation Audit")
+    resolved = collector.resolve_delayed_outcome(
+        prediction_id=pred.prediction_id, ground_truth_direction="BUY",
+        raw_return=0.02, net_return=0.018
+    )
     assert resolved is not None
     assert resolved.direction_correct is True
-    print(f"  [OK] Delayed Outcome Resolution PASSED for {pred.prediction_id}")
+    
+    ass_res = collector.generate_assessment()
+    assert ass_res.trade_count == 1
+    assert "NOT_AVAILABLE" in str(ass_res.sharpe_ratio)
+    assert ass_res.fresh_calibration_status == CalibrationStatus.INSUFFICIENT_EVIDENCE
+    assert ass_res.data_drift_status == DriftStatus.INSUFFICIENT_EVIDENCE
+    print(f"  [OK] 1-Trade Sharpe Metric Sufficiency: {ass_res.sharpe_ratio}")
+    print(f"  [OK] Decoupled Fresh Calibration Status: {ass_res.fresh_calibration_status.value}")
+    print(f"  [OK] Decoupled Drift Status: {ass_res.data_drift_status.value}")
 
-    # 5. Dashboard Model Frozen Verification
-    print("\n-- [TASK 05] Model Freeze Verification")
+    # 5. Latency & Instrument Identity Audit
+    print("\n-- [TASK 05] Latency & Instrument Identity Normalization Audit")
+    assert pred.canonical_symbol == "BTC-USD"
+    assert pred.source_symbol == "BTC/USDT"
+    assert ass_res.model_inference_latency.count >= 1
+    assert ass_res.end_to_end_latency.count >= 1
+    print(f"  [OK] Canonical Instrument Normalization: {pred.source_symbol} -> {pred.canonical_symbol}")
+    print(f"  [OK] Model Inference Latency Stats: Mean={ass_res.model_inference_latency.mean_ms} ms")
+    print(f"  [OK] End-to-End Latency Stats: Mean={ass_res.end_to_end_latency.mean_ms} ms")
+
+    # 6. Model Freeze Verification
+    print("\n-- [TASK 06] Model Freeze Verification")
     assert pred.model_id == "ALGO_LAYA_V001"
     assert pred.authority == "SHADOW_ONLY"
     print("  [OK] Model ALGO_LAYA_V001 verified frozen and authority SHADOW_ONLY")

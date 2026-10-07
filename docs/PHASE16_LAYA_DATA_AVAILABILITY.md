@@ -1,16 +1,13 @@
-# Phase 16 — Laya Data Availability Policy
+# Phase 16 — Laya Data Availability Policy & Cutoff Methodology
 
 ## Data Availability Status Architecture
 Data Availability Status concerns the market-data layer only. It answers:
 > "Can the system currently obtain sufficiently fresh, valid market data?"
 
-## Allowed Status Values
-- `DATA_AVAILABLE`: Fresh eligible market data exists and data pipeline is healthy.
-- `DATA_STALE`: Market data feeds or historical datasets have exceeded freshness limits.
-- `DATA_UNAVAILABLE`: Market data cannot be accessed or loaded.
-- `DATA_QUALITY_BLOCKED`: Data quality audits detected severe corruption or look-ahead leakage.
-- `DATA_PROVIDER_BLOCKED`: Underlying provider API is unreachable or rate-limited.
-- `NO_ELIGIBLE_MARKETS`: No universe instruments met minimum bar length or quality criteria.
+## Phase 15 Cutoff Methodology
+- **Scope-Specific Cutoffs**: Cutoff timestamps (`2026-09-20T23:59:59Z`) are evaluated per symbol, asset class, and timeframe.
+- **Fresh Record Audit**: A record is classified as `FRESH` if and only if its timestamp is strictly greater than the Phase 15 cutoff for its scope (`timestamp > scope_cutoff`).
+- **Separation of Quantities**: Total historical records (e.g. 943) are never conflated with fresh post-Phase 15 observations.
 
-## Important Rule
-This status does NOT inspect model performance or evidence counts.
+## Instrument Normalization
+Source symbols (e.g. `BTC/USDT`, `RELIANCE`) are normalized to canonical project symbols (`BTC-USD`, `RELIANCE.NS`) while preserving full source provenance (`source_symbol`, `provider`).

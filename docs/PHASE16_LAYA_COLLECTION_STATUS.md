@@ -12,5 +12,6 @@ Collection Status answers:
 - `COLLECTION_ERROR`: Technical collector failure prevents new prediction gathering.
 - `COLLECTION_COMPLETE_FOR_WINDOW`: The configured collection window is complete.
 
-## State Transitions
-Transitions are explicit. Pausing collection does NOT erase or downgrade Evidence Status.
+## Decoupled Collection & Evidence Policy
+- Restarting or pausing collection does NOT reset or erase accumulated Evidence Status.
+- A running collector does NOT imply the model is validated.

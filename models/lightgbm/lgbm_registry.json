@@ -1,0 +1,88 @@
+[
+  {
+    "model_id": "ALGO_LGBM_V001",
+    "model_type": "LightGBM_Regressor",
+    "run_id": "ALGO_LGBM_TRAIN_RUN_001",
+    "lightgbm_version": "4.7.0",
+    "python_version": "3.11.0",
+    "dataset_version": "ALGO_DECISION_DATASET_V1",
+    "dataset_manifest_hash": "HASH_LGBM_DATASET_V1",
+    "feature_schema_version": "LIGHTGBM_FEATURE_SCHEMA_V1",
+    "target_policy_version": "LIGHTGBM_TARGET_POLICY_V1",
+    "split_policy_version": "LIGHTGBM_SPLIT_POLICY_V1",
+    "training_config_hash": "HASH_LGBM_CONFIG_V1",
+    "seed": 42,
+    "best_iteration": 294,
+    "training_range": {
+      "start": "2026-02-19T00:00:00Z",
+      "end": "2026-04-26T00:00:00Z"
+    },
+    "validation_range": {
+      "start": "2026-04-27T00:00:00Z",
+      "end": "2026-05-11T00:00:00Z"
+    },
+    "holdout_range": {
+      "start": "2026-05-12T00:00:00Z",
+      "end": "2026-05-26T00:00:00Z"
+    },
+    "validation_metrics": {
+      "rmse": 0.000409,
+      "mae": 0.000357,
+      "r2_score": 0.6017,
+      "directional_accuracy": 1.0,
+      "correlation": 0.7989,
+      "sample_size": 15
+    },
+    "holdout_metrics": {
+      "rmse": 0.000564,
+      "mae": 0.000548,
+      "r2_score": -29.6529,
+      "directional_accuracy": 1.0,
+      "correlation": 0.4136,
+      "sample_size": 15
+    },
+    "baseline_metrics": {
+      "validation": {
+        "ZERO_RETURN": {
+          "rmse": 0.001451,
+          "mae": 0.001298,
+          "r2_score": -4.0027,
+          "directional_accuracy": 1.0,
+          "correlation": 0.0,
+          "sample_size": 15
+        },
+        "HISTORICAL_MEAN": {
+          "rmse": 0.002138,
+          "mae": 0.002038,
+          "r2_score": -9.8679,
+          "directional_accuracy": 0.0,
+          "correlation": 0.0,
+          "sample_size": 15
+        }
+      },
+      "holdout": {
+        "ZERO_RETURN": {
+          "rmse": 0.002562,
+          "mae": 0.00256,
+          "r2_score": -631.2601,
+          "directional_accuracy": 1.0,
+          "correlation": 0.0,
+          "sample_size": 15
+        },
+        "HISTORICAL_MEAN": {
+          "rmse": 0.003302,
+          "mae": 0.0033,
+          "r2_score": -1048.8219,
+          "directional_accuracy": 0.0,
+          "correlation": 0.0,
+          "sample_size": 15
+        }
+      }
+    },
+    "subgroup_metrics": {},
+    "checkpoint_hash": "HASH_LGBM_MODEL_V001",
+    "status": "VALIDATED_FOR_RESEARCH",
+    "decision_authority": "OFFLINE_RESEARCH_ONLY",
+    "created_at": "2026-10-07T20:42:52.365855"
+  }
+]
