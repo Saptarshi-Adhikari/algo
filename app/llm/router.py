@@ -30,6 +30,16 @@ class LLMRouter(BaseLLMProvider):
         self.openrouter = openrouter or OpenRouterLLMProvider()
         self.mock = mock or MockLLMProvider()
 
+    def get_status(self) -> dict:
+        """Returns the status and configuration of the provider chain."""
+        return {
+            "active_provider": "ollama",
+            "ollama_available": hasattr(self.ollama, "is_available") and self.ollama.is_available() if hasattr(self.ollama, "is_available") else True,
+            "gemini_configured": hasattr(self.gemini, "is_configured") and self.gemini.is_configured(),
+            "openrouter_configured": hasattr(self.openrouter, "is_configured") and self.openrouter.is_configured(),
+            "mock_available": True
+        }
+
     def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         # 1. Try Ollama (PRIMARY LOCAL)
         try:

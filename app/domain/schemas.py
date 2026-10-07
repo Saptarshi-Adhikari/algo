@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional, Literal
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 
-MarketType = Literal["INDIAN_EQUITY", "FOREX"]
-DataMode = Literal["HISTORICAL", "LIVE_PAPER", "REPLAY", "DEMO"]
+MarketType = Literal["INDIAN_EQUITY", "INDIAN_INDEX", "FOREX", "CRYPTO", "GOLD"]
+DataMode = Literal["REAL", "HISTORICAL", "DELAYED", "SYNTHETIC", "REPLAY", "DEMO", "LIVE_PAPER"]
 DataSplitName = Literal["DEVELOPMENT", "VALIDATION", "HOLDOUT"]
 MarketRegimeType = Literal["TRENDING", "RANGING", "HIGH_VOLATILITY", "LOW_VOLATILITY", "UNKNOWN"]
 CriticVerdictType = Literal["REJECT", "RETEST", "KEEP_FOR_PAPER_TESTING"]
@@ -64,6 +64,10 @@ class BacktestMetrics(BaseModel):
     average_loss: float
     profit_factor: float
     data_split: DataSplitName
+    sortino_ratio: Optional[float] = 0.0
+    calmar_ratio: Optional[float] = 0.0
+    expectancy_per_trade: Optional[float] = 0.0
+    sample_size_warning: Optional[str] = "ADEQUATE_SAMPLE"
 
 class CriticEvaluation(BaseModel):
     verdict: CriticVerdictType

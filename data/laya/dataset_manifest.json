@@ -1,0 +1,28 @@
+{
+  "dataset_version": "ALGO_LAYA_DATASET_V1",
+  "question_schema_version": "LAYA_QUESTION_SET_V2",
+  "target_policy_version": "ALGO_LAYA_TARGET_POLICY_V1",
+  "distribution_policy_version": "ALGO_LAYA_TARGET_DISTRIBUTION_V1",
+  "record_counts": {
+    "train": 524,
+    "calibration": 131,
+    "validation": 149,
+    "holdout": 139,
+    "total": 943
+  },
+  "split_definition": {
+    "train_source": "DEVELOPMENT (80% chronological slice)",
+    "calibration_source": "DEVELOPMENT (20% chronological slice)",
+    "validation_source": "VALIDATION (100% Phase 11 validation set)",
+    "holdout_source": "HOLDOUT (100% protected Phase 11 holdout set)"
+  },
+  "files": {
+    "train": "data\\laya\\train.jsonl",
+    "calibration": "data\\laya\\calibration.jsonl",
+    "validation": "data\\laya\\validation.jsonl",
+    "holdout": "data\\laya\\holdout.jsonl"
+  },
+  "fine_tuning_executed": false,
+  "model_weights_mutated": false,
+  "decision_authority": "SHADOW_ONLY"
+}

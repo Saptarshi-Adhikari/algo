@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     DEFAULT_SLIPPAGE_BPS: float = 1.0       # 1 bps (0.0001)
 
     # Data engine defaults
-    DEFAULT_MARKET: Literal["INDIAN_EQUITY", "FOREX"] = "INDIAN_EQUITY"
+    DEFAULT_MARKET: Literal["INDIAN_EQUITY", "INDIAN_INDEX", "FOREX", "CRYPTO", "GOLD"] = "INDIAN_EQUITY"
     DEFAULT_DATA_MODE: Literal["HISTORICAL", "LIVE_PAPER", "REPLAY", "DEMO"] = "HISTORICAL"
     DEFAULT_TIMEFRAME: str = "1d"
 

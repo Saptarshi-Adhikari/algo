@@ -5,6 +5,7 @@ from app.data.splitter import DataSplitter
 from app.data.indian_provider import IndianMarketDataProvider
 from app.data.forex_provider import ForexDataProvider
 from app.data.replay_provider import ReplayDataProvider
+from app.data.provider_factory import get_provider
 from app.evaluation.regime import RegimeClassifier
 from app.backtesting.engine import Backtester
 from app.agents.researcher import ResearcherAgent
@@ -48,7 +49,11 @@ class ExperimentRunner:
         logger.info(f"Starting Bounded Experiment Loop for {symbol} ({market}) - Max Iterations: {bounded_max}")
 
         # 1. Fetch market data & split chronologically
+        from app.data.registry import ResearchDatasetRegistry
         raw_data = self.data_provider.fetch_ohlcv(symbol=symbol, timeframe=timeframe)
+        ds_entry = ResearchDatasetRegistry.register(raw_data, provider_name=getattr(self.data_provider, "__class__", {}).__name__)
+        raw_data.metadata["dataset_id"] = ds_entry.dataset_id
+        
         splits = self.splitter.split(raw_data)
         dev_data = splits["DEVELOPMENT"]
         val_data = splits["VALIDATION"]
@@ -79,17 +84,39 @@ class ExperimentRunner:
                 timeframe=timeframe
             )
 
-            # C. Backtest on DEVELOPMENT split
+            # C. AI Strategy Validity Gate: Check future reference safety
+            from app.strategies.future_validator import FutureDataReferenceValidator, FutureDataReferenceError
+            try:
+                FutureDataReferenceValidator.validate_strategy(spec)
+            except FutureDataReferenceError as fe:
+                logger.warning(f"FutureDataReferenceError detected in strategy {spec.version}: {fe}")
+                dev_metrics, _, _ = self.backtester.run(dev_data, spec, data_split="DEVELOPMENT")
+                critic_eval = self.critic.evaluate(dev_metrics, spec, regime=regime)
+                critic_eval.reasoning = f"Future reference error: {fe}"
+                record = self.memory_agent.record_experiment(
+                    experiment_id=exp_id, hypothesis=hypothesis, spec=spec,
+                    metrics=dev_metrics, evaluation=critic_eval, regime=regime,
+                    parent_experiment_id=parent_version_id
+                )
+                executed_records.append(record)
+                current_version_num += 1
+                continue
+
+            # D. Backtest on DEVELOPMENT split
             dev_metrics, dev_trades, _ = self.backtester.run(dev_data, spec, data_split="DEVELOPMENT")
 
-            # D. Backtest on VALIDATION split
+            # E. Backtest on VALIDATION split
             val_metrics, val_trades, _ = self.backtester.run(val_data, spec, data_split="VALIDATION")
 
-            # E. Critic evaluates backtest evidence (Primary valuation on validation set)
+            # F. Validity Gate Check: Handle NO_TRADES explicitly
+            if dev_metrics.trade_count == 0 and val_metrics.trade_count == 0:
+                logger.info(f"Validity Gate: Strategy {spec.version} generated 0 trades across DEV/VAL splits (NO_TRADES).")
+
+            # G. Critic evaluates backtest evidence (Primary valuation on validation set)
             eval_metrics = val_metrics if val_metrics.trade_count >= 5 else dev_metrics
             critic_eval = self.critic.evaluate(eval_metrics, spec, regime=regime)
 
-            # F. Memory Agent persists experiment record
+            # H. Memory Agent persists experiment record
             record = self.memory_agent.record_experiment(
                 experiment_id=exp_id,
                 hypothesis=hypothesis,

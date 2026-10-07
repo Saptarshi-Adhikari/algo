@@ -55,3 +55,34 @@ class DataSplitter:
                 "the holdout dataset to prevent overfitting. Holdout access requires explicit manual approval."
             )
         return splits[split_name]
+
+    def walk_forward_split(
+        self,
+        data: MarketData,
+        num_windows: int = 3,
+        dev_bars: int = 250,
+        val_bars: int = 60
+    ) -> list:
+        """Generates rolling non-overlapping walk-forward development & validation windows."""
+        df = data.df.copy()
+        n = len(df)
+        windows = []
+        step_size = max(1, (n - dev_bars - val_bars) // max(1, num_windows - 1)) if num_windows > 1 else 0
+
+        for i in range(num_windows):
+            start_idx = i * step_size
+            dev_end = start_idx + dev_bars
+            val_end = dev_end + val_bars
+            if val_end > n:
+                break
+            
+            dev_df = df.iloc[start_idx:dev_end].reset_index(drop=True)
+            val_df = df.iloc[dev_end:val_end].reset_index(drop=True)
+
+            windows.append({
+                "window_index": i + 1,
+                "DEVELOPMENT": MarketData(data.symbol, data.market, data.timeframe, dev_df, {**data.metadata, "split": f"DEV_WF_{i+1}"}),
+                "VALIDATION": MarketData(data.symbol, data.market, data.timeframe, val_df, {**data.metadata, "split": f"VAL_WF_{i+1}"})
+            })
+        return windows
+

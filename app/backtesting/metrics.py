@@ -24,7 +24,11 @@ def calculate_metrics(
             average_win=0.0,
             average_loss=0.0,
             profit_factor=0.0,
-            data_split=data_split
+            data_split=data_split,
+            sortino_ratio=0.0,
+            calmar_ratio=0.0,
+            expectancy_per_trade=0.0,
+            sample_size_warning="NO_TRADES"
         )
 
     final_equity = equity_curve.iloc[-1]
@@ -67,6 +71,26 @@ def calculate_metrics(
     total_gross_loss = abs(sum(losses))
     profit_factor = float(total_gross_win / total_gross_loss) if total_gross_loss > 0 else (999.0 if total_gross_win > 0 else 0.0)
 
+    # Extended Metrics (Sortino, Calmar, Expectancy, Sample Warning)
+    downside_returns = daily_returns[daily_returns < 0]
+    if len(downside_returns) > 1 and downside_returns.std() > 1e-8:
+        rf_daily = (1.0 + risk_free_rate) ** (1.0 / 252.0) - 1.0
+        sortino_ratio = float(((daily_returns.mean() - rf_daily) / downside_returns.std()) * np.sqrt(252.0))
+    else:
+        sortino_ratio = 0.0
+
+    calmar_ratio = float(annualized_return_pct / abs(max_drawdown_pct)) if max_drawdown_pct < 0 else 0.0
+    expectancy_per_trade = float((win_rate * average_win) - ((1.0 - win_rate) * abs(average_loss)))
+
+    if trade_count == 0:
+        sample_size_warning = "NO_TRADES"
+    elif trade_count < 5:
+        sample_size_warning = "INSUFFICIENT_SAMPLE"
+    elif trade_count < 25:
+        sample_size_warning = "LIMITED_SAMPLE"
+    else:
+        sample_size_warning = "ADEQUATE_SAMPLE"
+
     return BacktestMetrics(
         total_return_pct=round(total_return_pct, 4),
         annualized_return_pct=round(annualized_return_pct, 4),
@@ -77,5 +101,9 @@ def calculate_metrics(
         average_win=round(average_win, 4),
         average_loss=round(average_loss, 4),
         profit_factor=round(profit_factor, 4),
-        data_split=data_split
+        data_split=data_split,
+        sortino_ratio=round(sortino_ratio, 4),
+        calmar_ratio=round(calmar_ratio, 4),
+        expectancy_per_trade=round(expectancy_per_trade, 4),
+        sample_size_warning=sample_size_warning
     )

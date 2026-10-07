@@ -1,11 +1,14 @@
 """Pure deterministic Python backtesting engine."""
 import pandas as pd
 import numpy as np
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 from app.data.base_provider import MarketData
 from app.domain.schemas import StrategySpec, TradeRecord, BacktestMetrics, DataSplitName
 from app.strategies.evaluator import StrategyEvaluator
 from app.backtesting.metrics import calculate_metrics
+
+from app.domain.execution_schemas import CostModel, ExecutionModel
+from app.services.execution_calculator import CanonicalExecutionCalculator
 
 class Backtester:
     """Deterministic event-driven / bar-by-bar Python backtesting engine."""
@@ -14,11 +17,24 @@ class Backtester:
         self,
         initial_cash: float = 100000.0,
         commission_bps: float = 3.0,  # 3 bps = 0.0003
-        slippage_bps: float = 1.0     # 1 bps = 0.0001
+        slippage_bps: float = 1.0,     # 1 bps = 0.0001
+        cost_model: Optional[CostModel] = None,
+        exec_model: Optional[ExecutionModel] = None
     ):
         self.initial_cash = initial_cash
-        self.commission_rate = commission_bps / 10000.0
-        self.slippage_rate = slippage_bps / 10000.0
+        self.commission_bps = commission_bps
+        self.slippage_bps = slippage_bps
+
+        self.cost_model = cost_model or CostModel(commission_bps=commission_bps)
+        self.exec_model = exec_model or ExecutionModel(slippage_bps=slippage_bps)
+
+    @property
+    def commission_rate(self) -> float:
+        return self.cost_model.commission_bps / 10000.0
+
+    @property
+    def slippage_rate(self) -> float:
+        return self.exec_model.slippage_bps / 10000.0
 
     def run(
         self,

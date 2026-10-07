@@ -1,0 +1,23 @@
+{
+  "regime_map": {
+    "TRENDING": "TRENDING",
+    "RANGING": "RANGING",
+    "HIGH_VOLATILITY": "HIGH_VOLATILITY",
+    "LOW_VOLATILITY": "LOW_VOLATILITY"
+  },
+  "direction_bias": {
+    "BUY": 0.45,
+    "SELL": 0.45,
+    "HOLD": 0.1
+  },
+  "risk_map": {
+    "LOW": "LOW",
+    "MEDIUM": "MEDIUM",
+    "HIGH": "HIGH"
+  },
+  "permission_map": {
+    "ALLOW": "ALLOW",
+    "REJECT": "REJECT"
+  },
+  "version": "1.0.0"
+}

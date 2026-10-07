@@ -1,0 +1,40 @@
+# ALGO Laya Domain Fine-Tuning Configuration Package V1
+# PHASE 14 READINESS TEMPLATE — DO NOT EXECUTE FINE-TUNING IN PHASE 14
+
+experiment_name: "algo_laya_finetune_v1"
+phase: 14
+status: "READINESS_ONLY_NOT_EXECUTED"
+
+model:
+  base_checkpoint: "convaiinnovations/laya"
+  laya_package_version: "0.3.5"
+  device: "cpu"
+
+dataset:
+  version: "ALGO_LAYA_DATASET_V1"
+  manifest: "data/laya/dataset_manifest.json"
+  train_file: "data/laya/train.jsonl"
+  calibration_file: "data/laya/calibration.jsonl"
+  validation_file: "data/laya/validation.jsonl"
+  holdout_file: "data/laya/holdout.jsonl"
+
+policies:
+  target_policy_version: "ALGO_LAYA_TARGET_POLICY_V1"
+  distribution_policy_version: "ALGO_LAYA_TARGET_DISTRIBUTION_V1"
+  question_schema_version: "LAYA_QUESTION_SET_V2"
+
+training_hyperparameters:
+  epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 2
+  encoder_learning_rate: 1.0e-5
+  head_learning_rate: 1.0e-4
+  weight_decay: 0.01
+  seed: 42
+
+safety_boundaries:
+  fine_tuning_allowed_in_phase_14: false
+  mutate_weights_allowed: false
+  decision_authority: "SHADOW_ONLY"
+  paper_trading_only: true
+  allow_real_broker: false

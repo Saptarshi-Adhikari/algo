@@ -70,5 +70,21 @@ class ReplayDataProvider(BaseDataProvider):
             market=market_type,
             timeframe=timeframe,
             df=df,
-            metadata={"regime": self.regime, "is_replay": True}
+            metadata={"regime": self.regime, "is_replay": True, "data_mode": "REPLAY"}
         )
+
+    def stream_bars(self, symbol: str = "SYNTHETIC_IND", timeframe: str = "1d"):
+        """Yields historical bars sequentially one bar at a time with strict look-ahead protection."""
+        full_data = self.fetch_ohlcv(symbol=symbol, timeframe=timeframe)
+        full_df = full_data.df
+        for i in range(1, len(full_df) + 1):
+            # Strict slice: yield ONLY history up to current bar index 'i'
+            sub_df = full_df.iloc[:i].copy()
+            yield MarketData(
+                symbol=symbol,
+                market=full_data.market,
+                timeframe=timeframe,
+                df=sub_df,
+                metadata={"current_bar_index": i, "total_bars": len(full_df), "data_mode": "REPLAY"}
+            )
+

@@ -5,6 +5,8 @@ import pandas as pd
 from pydantic import BaseModel
 from app.domain.schemas import MarketType
 
+import hashlib
+
 class MarketData:
     """Standardized OHLCV Market Data container."""
 
@@ -18,11 +20,17 @@ class MarketData:
         df: pd.DataFrame,
         metadata: Optional[Dict[str, Any]] = None
     ):
-        self.symbol = symbol
+        self.symbol = symbol.strip().upper()
         self.market = market
         self.timeframe = timeframe
         self.metadata = metadata or {}
         self.df = self._validate_and_format(df)
+        self.dataset_hash = self._compute_hash()
+
+    def _compute_hash(self) -> str:
+        """Computes a SHA256 checksum of the normalized market data for reproducibility tracking."""
+        raw_bytes = self.df.to_json(date_format="iso").encode("utf-8")
+        return hashlib.sha256(raw_bytes).hexdigest()[:16]
 
     def _validate_and_format(self, df: pd.DataFrame) -> pd.DataFrame:
         if df.empty:
@@ -38,15 +46,33 @@ class MarketData:
         if missing:
             raise ValueError(f"MarketData missing required columns for {self.symbol}: {missing}")
 
-        # Ensure timestamp is datetime and sorted
+        # Ensure timestamp is datetime, normalized, and sorted
         formatted_df["timestamp"] = pd.to_datetime(formatted_df["timestamp"])
+        
+        # Deduplicate identical timestamps
+        formatted_df = formatted_df.drop_duplicates(subset=["timestamp"], keep="last")
         formatted_df = formatted_df.sort_values("timestamp").reset_index(drop=True)
 
         # Numeric conversions
         for col in ["open", "high", "low", "close", "volume"]:
             formatted_df[col] = pd.to_numeric(formatted_df[col], errors="coerce")
 
-        formatted_df = formatted_df.dropna(subset=["close"])
+        # Fill zero volume if appropriate
+        formatted_df["volume"] = formatted_df["volume"].fillna(0.0)
+
+        # Drop rows missing essential price data
+        formatted_df = formatted_df.dropna(subset=["close", "open", "high", "low"])
+
+        # Validate strictly positive prices
+        if (formatted_df["close"] <= 0).any():
+            raise ValueError(f"MarketData for {self.symbol} contains non-positive price values.")
+
+        # Validate OHLC logical relationship
+        bad_high = (formatted_df["high"] < formatted_df["open"]) | (formatted_df["high"] < formatted_df["close"])
+        bad_low = (formatted_df["low"] > formatted_df["open"]) | (formatted_df["low"] > formatted_df["close"])
+        if bad_high.any() or bad_low.any():
+            raise ValueError(f"MarketData for {self.symbol} contains invalid OHLC relationships (e.g. High < Open/Close or Low > Open/Close).")
+
         return formatted_df
 
     def __len__(self) -> int:

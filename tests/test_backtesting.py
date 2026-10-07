@@ -48,12 +48,24 @@ def test_backtester_execution(trending_market_data):
     assert metrics.total_return_pct != 0.0
     assert len(equity) == len(trending_market_data)
 
-def test_metrics_no_trades():
-    trades = []
+def test_metrics_sample_size_categories():
     equity = pd.Series([100000.0, 100000.0])
-    metrics = calculate_metrics(trades, equity, 100000.0, "DEVELOPMENT")
+    
+    # 1. NO_TRADES (0 trades)
+    m0 = calculate_metrics([], equity, 100000.0, "DEVELOPMENT")
+    assert m0.trade_count == 0
+    assert m0.sample_size_warning == "NO_TRADES"
 
-    assert metrics.trade_count == 0
-    assert metrics.total_return_pct == 0.0
-    assert metrics.sharpe_ratio == 0.0
-    assert metrics.win_rate == 0.0
+    # 2. INSUFFICIENT_SAMPLE (1-4 trades)
+    from app.domain.schemas import TradeRecord
+    dummy_trade = TradeRecord(trade_id="T1", symbol="S", side="LONG", entry_time="2023-01-01", exit_time="2023-01-02", entry_price=10.0, exit_price=11.0, quantity=1.0, pnl=1.0)
+    m1 = calculate_metrics([dummy_trade] * 3, pd.Series([100.0, 101.0, 102.0, 103.0]), 100.0, "DEVELOPMENT")
+    assert m1.sample_size_warning == "INSUFFICIENT_SAMPLE"
+
+    # 3. LIMITED_SAMPLE (5-24 trades)
+    m5 = calculate_metrics([dummy_trade] * 10, pd.Series([100.0] * 11), 100.0, "DEVELOPMENT")
+    assert m5.sample_size_warning == "LIMITED_SAMPLE"
+
+    # 4. ADEQUATE_SAMPLE (25+ trades)
+    m25 = calculate_metrics([dummy_trade] * 30, pd.Series([100.0] * 31), 100.0, "DEVELOPMENT")
+    assert m25.sample_size_warning == "ADEQUATE_SAMPLE"

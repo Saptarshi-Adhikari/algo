@@ -5,6 +5,7 @@ A local-first, provider-agnostic AI quantitative research and paper-trading plat
 ---
 
 ## 🛑 NON-NEGOTIABLE SAFETY GUARANTEE
+
 - **PAPER-TRADING ONLY**: This platform operates strictly with simulated virtual capital, simulated order fills, transaction fees, and slippage.
 - **NO REAL BROKER EXECUTION**: The system does NOT contain any real broker order placement APIs (`place_order()`, `modify_order()`, `cancel_order()`, etc.).
 - **DETERMINISTIC METRICS**: All backtesting returns, Sharpe ratios, and drawdowns are calculated using pure Python math—never delegated to LLM hallucination.
@@ -53,6 +54,7 @@ The application is **100% functional locally** using Ollama alone without requir
 ## ⚡ Quick Start
 
 ### 1. Installation
+
 Clone the repository and set up a virtual environment:
 
 ```bash
@@ -70,6 +72,7 @@ pip install -r requirements.txt
 ```
 
 ### 2. Local Environment Configuration
+
 Copy `.env.example` to `.env`:
 
 ```bash
@@ -81,12 +84,15 @@ To use optional Gemini or OpenRouter fallback, populate `GEMINI_API_KEY` or `OPE
 ### 3. Running the System
 
 #### Launch Interactive Streamlit Dashboard
+
 ```bash
 streamlit run dashboard/app.py
 ```
+
 Open your browser at `http://localhost:8501`.
 
 #### Execute Test Suite
+
 ```bash
 pytest -v
 ```
@@ -105,4 +111,5 @@ pytest -v
 ---
 
 ## 📜 License
+
 MIT License

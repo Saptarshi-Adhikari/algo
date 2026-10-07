@@ -32,6 +32,15 @@ class CriticAgent:
         regime: str = "UNKNOWN"
     ) -> CriticEvaluation:
         # Rule-based hard checks first for deterministic safety
+        if metrics.trade_count == 0:
+            logger.info("Critic hard-rule triggered: Trade count == 0 -> REJECT (NO_TRADES)")
+            return CriticEvaluation(
+                verdict="REJECT",
+                reasoning="No executed trades; performance is not statistically evaluable (NO_TRADES).",
+                is_overfitted=False,
+                has_adequate_trades=False
+            )
+
         if metrics.trade_count < 5:
             logger.info("Critic hard-rule triggered: Trade count < 5 -> REJECT")
             return CriticEvaluation(

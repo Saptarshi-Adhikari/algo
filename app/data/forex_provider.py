@@ -28,7 +28,7 @@ class ForexDataProvider(BaseDataProvider):
 
         try:
             ticker = yf.Ticker(yf_symbol)
-            df = ticker.history(period="1y" if not start_date else None, start=start_date, end=end_date, interval=timeframe)
+            df = ticker.history(period="5y" if not start_date else None, start=start_date, end=end_date, interval=timeframe)
 
             if df.empty:
                 logger.warning(f"No yfinance forex data returned for {yf_symbol}, using synthetic generator.")
@@ -39,7 +39,13 @@ class ForexDataProvider(BaseDataProvider):
                 "Date": "timestamp", "Datetime": "timestamp",
                 "Open": "open", "High": "high", "Low": "low", "Close": "close", "Volume": "volume"
             })
-            return MarketData(symbol=symbol, market="FOREX", timeframe=timeframe, df=df)
+            return MarketData(
+                symbol=symbol,
+                market="FOREX",
+                timeframe=timeframe,
+                df=df,
+                metadata={"data_mode": "HISTORICAL", "provider": "yfinance"}
+            )
 
         except Exception as e:
             logger.error(f"Error fetching forex data for {yf_symbol}: {e}. Falling back to synthetic.")
@@ -56,12 +62,17 @@ class ForexDataProvider(BaseDataProvider):
             rates.append(base_rate)
 
         rates = np.array(rates)
+        opens = rates * 0.999
+        closes = rates
+        highs = np.maximum(opens, closes) * 1.003
+        lows = np.minimum(opens, closes) * 0.997
+
         df = pd.DataFrame({
             "timestamp": dates,
-            "open": rates * 0.999,
-            "high": rates * 1.003,
-            "low": rates * 0.997,
-            "close": rates,
+            "open": opens,
+            "high": highs,
+            "low": lows,
+            "close": closes,
             "volume": np.random.randint(10000, 500000, size=len(dates))
         })
         return MarketData(symbol=symbol, market="FOREX", timeframe=timeframe, df=df, metadata={"is_synthetic": True})
